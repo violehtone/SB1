@@ -22,7 +22,13 @@ from math import sqrt, atan2, degrees
 
 
 # Vector functions that we need to calculate the angles
+def vectorSubtract(v1, v2):
+    vecsub = [a - b for a, b in zip(v2, v1)]
+    return vecsub
 
+def unitVector(v1):
+    for i in v1:
+        i = i / magnitude(v1)
 
 def dot_product(v1, v2):
     """ Calculate the dot product of two vectors """
@@ -124,30 +130,25 @@ def calculateDihedral(a1, a2, a3, a4):
     # you may use the functions "cross_product","dot_product" and "magnitude" defined above
     # you can also use the python math function "atan2" and "degrees"
 
-    # Calculate vectors and normals from the points
-    v1 = [a - b for a, b in zip(a2, a1)]
-    v2 = [a - b for a, b in zip(a3, a1)]
-    normal1 = cross_product(v1, v2)
+    # define 2 planes (a1,a2,a3) and (a2,a3,a4) and find normals
+    v1 = vectorSubtract(a1,a2) #N-C
+    v2 = vectorSubtract(a1,a3) #Ca-N
+    n1 = cross_product(v1, v2)
 
-    v3 = [a - b for a, b in zip(a4, a2)]
-    v4 = [a - b for a, b in zip(a3, a2)]
-    normal2 = cross_product(v3, v4)
+    v3 = vectorSubtract(a2,a3) #N-Ca
+    v4 = vectorSubtract(a2,a4) #C-Ca
+    n2 = cross_product(v3,v4)
 
-    # Calculate the product of lengths of the vectors
-    length_v12 = magnitude(v1) * magnitude(v2)
-    length_v34 = magnitude(v3) * magnitude(v4)
+    #Calculate angle between the normals
+    cos = dot_product(n1,n2) / (magnitude(n1) * magnitude(n2))
+    u = unitVector(v2)
+    sin = (dot_product(cross_product(n1,n2),u) / (magnitude(n1) * magnitude(n2))
 
-    #Calculate dihedral angle
-    dp1 = dot_product(v1, v2) / length_v12
-    dp2 = dot_product(v3,v4) / length_v34
-
-    #atan2 returns an angle (in radius) from x-angle to a specified point (x,y)
-
-    dihedral = atan2(normal1, normal2)
+    #atan2
+    dihedral = degrees(atan2(sin, cos))
 
     # END CODING HERE
     return dihedral
-
 
 # print(caculateDihedral([1, 9, 2], [3, 2, 1], [2, 4, 7], [8, 2, 5]))
 
@@ -164,10 +165,10 @@ def assign_ss(phi, psi):
         secondary_structure = "alpha"  # left handed
     elif (psi > 0 and phi < 0):
         secondary_structure = "beta"
-    elif (psi < 0 and phi > 0):
-        secondary_structure = "loop"
     elif (psi < 0 and phi < 0):
         secondary_structure = "alpha"  # right handed
+    else:
+        secondary_structure = "loop"
 
     # END CODING HERE
     return secondary_structure
@@ -194,8 +195,29 @@ def print_phi_psi(pdbcoord, pdbseq, outfile):
             # gives a warning when this happens
             try:
                 # START CODING HERE
+                c = pdbcoord[chain][res_num]['C'] ## x,y,z coordinates of first residue C
+                c2 = pdbcoord[chain][res_num+1]['C'] ## x,y,z coordinates of first residue C
+                n = pdbcoord[chain][res_num]['N'] # first residue N
+                n2 = pdbcoord[chain][res_num+1]['N'] # second residue N
+                ca = pdbcoord[chain][res_num]['CA'] # first residue Ca
+                ca2 = pdbcoord[chain][res_num+1]['CA'] # second residue Ca
 
+                #phi = N, C, CA, N(i+1)  // C, N2, Ca2, C2
+                #psi = C, CA, N, C(i+1)  // N2, Ca2, C2, N3
+
+                phi = calculateDihedral(c,n2,ca2,c2)
+                psi = calculateDihedral(n,ca,c,n2)
                 ss = assign_ss(phi, psi)
+
+                #phi = angle between planes defined by v1(C-N), v2(N-Ca), and v3(N-Ca), v4(Ca-C)
+                #psi = angle between plane v1(N-Ca), v2(Ca-C), and v3(Ca-C), v4(C-N)
+
+                #pdbcoord[chain][res_num][atom_type] = [xcoord, ycoord, zcoord]
+                #pdbseq[chain][res_num] = aa_type   
+                #   -> atom_type = "N", "CA", "C"
+                #   -> aa_type = "LEU", "ARG"
+                #   -> chain = "A"
+                #   -> res_num =  1, 2
 
             # END CODING HERE
             except KeyError:
