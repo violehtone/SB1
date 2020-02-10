@@ -23,12 +23,12 @@ from math import sqrt, atan2, degrees
 
 # Vector functions that we need to calculate the angles
 def vectorSubtract(v1, v2):
-    vecsub = [a - b for a, b in zip(v2, v1)]
-    return vecsub
+    return [a - b for a, b in zip(v2, v1)]
+
 
 def unitVector(v1):
-    for i in v1:
-        i = i / magnitude(v1)
+    return [x / magnitude(v1) for x in v1]
+
 
 def dot_product(v1, v2):
     """ Calculate the dot product of two vectors """
@@ -130,25 +130,39 @@ def calculateDihedral(a1, a2, a3, a4):
     # you may use the functions "cross_product","dot_product" and "magnitude" defined above
     # you can also use the python math function "atan2" and "degrees"
 
-    # define 2 planes (a1,a2,a3) and (a2,a3,a4) and find normals
-    v1 = vectorSubtract(a1,a2) #N-C
-    v2 = vectorSubtract(a1,a3) #Ca-N
+    #      vector             phi          psi
+    #   -> v1 = a1 -> a2    (C->N2)   / (N2->Ca2)
+    #   -> v2 = a2 -> a3    (N2->Ca2) / (Ca2->C2)
+    #   -> v3 = a2 -> a3    (N2->Ca2) / (Ca2->C2)
+    #   -> v4 = a3 -> a4    (Ca2->C2) / (C2->N3)
+
+    #                         a1   a2    a3    a4
+    # phi = calculateDihedral(c,   n2,   ca2,  c2)
+    # psi = calculateDihedral(n2,  ca2,  c2,   n3)
+
+    #define any two vectors of the 3 points that define a plane
+    v1 = vectorSubtract(a1, a2)
+    v2 = vectorSubtract(a2, a3)
+    v3 = vectorSubtract(a2, a3) #a3,a2
+    v4 = vectorSubtract(a3, a4)
+
+    #v2=v3, u(v2)
+
+
+    # define normals to the planes
     n1 = cross_product(v1, v2)
+    n2 = cross_product(v3, v4)
 
-    v3 = vectorSubtract(a2,a3) #N-Ca
-    v4 = vectorSubtract(a2,a4) #C-Ca
-    n2 = cross_product(v3,v4)
-
-    #Calculate angle between the normals
-    cos = dot_product(n1,n2) / (magnitude(n1) * magnitude(n2))
+    # Calculate angle between the normals
+    cos = dot_product(n1, n2) / (magnitude(n1) * magnitude(n2))
     u = unitVector(v2)
-    sin = (dot_product(cross_product(n1,n2),u) / (magnitude(n1) * magnitude(n2))
-
-    #atan2
+    #sin = magnitude(cross_product(n1,n2)) / (magnitude(n1) * magnitude(n2))
+    sin = dot_product(cross_product(n1,n2), u) / (magnitude(n1) * magnitude(n2))
     dihedral = degrees(atan2(sin, cos))
 
     # END CODING HERE
     return dihedral
+
 
 # print(caculateDihedral([1, 9, 2], [3, 2, 1], [2, 4, 7], [8, 2, 5]))
 
@@ -161,11 +175,11 @@ def assign_ss(phi, psi):
 
     secondary_structure = ""
 
-    if (psi > 0 and phi > 0):
+    if psi > 0 and phi > 0:
         secondary_structure = "alpha"  # left handed
-    elif (psi > 0 and phi < 0):
+    elif psi > 0 and phi < 0:
         secondary_structure = "beta"
-    elif (psi < 0 and phi < 0):
+    elif psi < 0 and phi < 0:
         secondary_structure = "alpha"  # right handed
     else:
         secondary_structure = "loop"
@@ -195,29 +209,24 @@ def print_phi_psi(pdbcoord, pdbseq, outfile):
             # gives a warning when this happens
             try:
                 # START CODING HERE
-                c = pdbcoord[chain][res_num]['C'] ## x,y,z coordinates of first residue C
-                c2 = pdbcoord[chain][res_num+1]['C'] ## x,y,z coordinates of first residue C
-                n = pdbcoord[chain][res_num]['N'] # first residue N
-                n2 = pdbcoord[chain][res_num+1]['N'] # second residue N
-                ca = pdbcoord[chain][res_num]['CA'] # first residue Ca
-                ca2 = pdbcoord[chain][res_num+1]['CA'] # second residue Ca
+                #skip first and last residue
+                if(res_num == list_residue_numbers[0] or res_num == list_residue_numbers[-1]):
+                    continue
 
-                #phi = N, C, CA, N(i+1)  // C, N2, Ca2, C2
-                #psi = C, CA, N, C(i+1)  // N2, Ca2, C2, N3
+                res_num0 = list_residue_numbers[list_residue_numbers.index(res_num)-1]
+                res_num2 = list_residue_numbers[list_residue_numbers.index(res_num)+1]
 
-                phi = calculateDihedral(c,n2,ca2,c2)
-                psi = calculateDihedral(n,ca,c,n2)
-                ss = assign_ss(phi, psi)
+                # define the atoms' coordinates used in phi/psi
+                # pdbcoord[chain][res_num][atom_type] => [x,y,z]
+                c0 = pdbcoord[chain][res_num0]['C']  # previous residue C
+                n = pdbcoord[chain][res_num]['N']  # current residue N
+                ca = pdbcoord[chain][res_num]['CA']  # current residue Ca
+                c = pdbcoord[chain][res_num]['C']  # current residue C
+                n2 = pdbcoord[chain][res_num2]['N']  # next residue N
 
-                #phi = angle between planes defined by v1(C-N), v2(N-Ca), and v3(N-Ca), v4(Ca-C)
-                #psi = angle between plane v1(N-Ca), v2(Ca-C), and v3(Ca-C), v4(C-N)
-
-                #pdbcoord[chain][res_num][atom_type] = [xcoord, ycoord, zcoord]
-                #pdbseq[chain][res_num] = aa_type   
-                #   -> atom_type = "N", "CA", "C"
-                #   -> aa_type = "LEU", "ARG"
-                #   -> chain = "A"
-                #   -> res_num =  1, 2
+                phi = calculateDihedral(c0,n, ca, c)
+                psi = calculateDihedral(n, ca, c, n2)
+                ss = assign_ss(phi,psi)
 
             # END CODING HERE
             except KeyError:
