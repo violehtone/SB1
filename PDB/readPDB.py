@@ -206,22 +206,24 @@ def print_phi_psi(pdbcoord, pdbseq, outfile):
                 # START CODING HERE
                 #skip first and last residue
                 if(res_num == list_residue_numbers[0] or res_num == list_residue_numbers[-1]):
-                    continue
+                    ss = None
+                    phi = None
+                    psi = None
 
-                res_num0 = list_residue_numbers[list_residue_numbers.index(res_num)-1]
-                res_num2 = list_residue_numbers[list_residue_numbers.index(res_num)+1]
+                else:
+                    res_num0 = list_residue_numbers[list_residue_numbers.index(res_num)-1]
+                    res_num2 = list_residue_numbers[list_residue_numbers.index(res_num)+1]
 
-                # define the atoms' coordinates used in phi/psi
-                # pdbcoord[chain][res_num][atom_type] => [x,y,z]
-                c0 = pdbcoord[chain][res_num0]['C']  # previous residue C
-                n = pdbcoord[chain][res_num]['N']  # current residue N
-                ca = pdbcoord[chain][res_num]['CA']  # current residue Ca
-                c = pdbcoord[chain][res_num]['C']  # current residue C
-                n2 = pdbcoord[chain][res_num2]['N']  # next residue N
+                    # define the atoms' coordinates used in phi/psi
+                    c0 = pdbcoord[chain][res_num0]['C']  # previous residue C
+                    n = pdbcoord[chain][res_num]['N']  # current residue N
+                    ca = pdbcoord[chain][res_num]['CA']  # current residue Ca
+                    c = pdbcoord[chain][res_num]['C']  # current residue C
+                    n2 = pdbcoord[chain][res_num2]['N']  # next residue N
 
-                phi = calculateDihedral(c0,n, ca, c)
-                psi = calculateDihedral(n, ca, c, n2)
-                ss = assign_ss(phi,psi)
+                    phi = calculateDihedral(c0,n, ca, c)
+                    psi = calculateDihedral(n, ca, c, n2)
+                    ss = assign_ss(phi,psi)
 
             # END CODING HERE
             except KeyError:
