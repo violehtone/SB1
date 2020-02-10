@@ -143,20 +143,15 @@ def calculateDihedral(a1, a2, a3, a4):
     #define any two vectors of the 3 points that define a plane
     v1 = vectorSubtract(a1, a2)
     v2 = vectorSubtract(a2, a3)
-    v3 = vectorSubtract(a2, a3) #a3,a2
     v4 = vectorSubtract(a3, a4)
-
-    #v2=v3, u(v2)
-
 
     # define normals to the planes
     n1 = cross_product(v1, v2)
-    n2 = cross_product(v3, v4)
+    n2 = cross_product(v2, v4)
 
     # Calculate angle between the normals
     cos = dot_product(n1, n2) / (magnitude(n1) * magnitude(n2))
     u = unitVector(v2)
-    #sin = magnitude(cross_product(n1,n2)) / (magnitude(n1) * magnitude(n2))
     sin = dot_product(cross_product(n1,n2), u) / (magnitude(n1) * magnitude(n2))
     dihedral = degrees(atan2(sin, cos))
 
