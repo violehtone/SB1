@@ -170,12 +170,15 @@ def assign_ss(phi, psi):
 
     secondary_structure = ""
 
-    if psi > 0 and phi > 0:
-        secondary_structure = "alpha"  # left handed
-    elif psi > 0 and phi < 0:
+    if phi < -40 and ((10 <= psi <= 180) or (-180 <= psi <= -170)):
         secondary_structure = "beta"
-    elif psi < 0 and phi < 0:
-        secondary_structure = "alpha"  # right handed
+
+    elif phi <- 40 and (-80 <= psi <= -10):
+        secondary_structure = "alpha" #right-handed alpha-helix
+
+    elif ((45 <= phi <= 60) and (10 <= psi <= 90)):
+        secondary_structure = "alpha" #left-handed alpha-helix
+
     else:
         secondary_structure = "loop"
 

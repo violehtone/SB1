@@ -157,9 +157,8 @@ def print_propensities(all_aa_count, buried_aa_count, outfile):
         p_aa_ss = buried_aa_count[aa] / all_aa_count[aa]
         propensity_buried = p_aa_ss / p_total_ss
         print(aa, propensity_buried, file=f)
-
-
 ### END CODING HERE
+
 
 def main():
     # check input directory
