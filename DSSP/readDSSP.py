@@ -80,7 +80,7 @@ def read_dir(d, unfolded_acc):
                     # write conditional statements indicating what
                     # needs to happen with 'special' residues
                     # skip unknown amino acids
-                    aa_type = 'C'
+                    aa_type = 'CB'
 
                 if (aa_type == "X" or aa_type == "Z"):
                     continue
@@ -127,7 +127,11 @@ def decide_if_buried(aa, acc, unfolded_acc):
     ## acc = Solvent accessibility
     ## aa = amino acid type
 
-    bsa = acc / unfolded_acc[aa]
+    if(aa == 'CB'):
+        bsa = acc / unfolded_acc['C']
+    else:
+        bsa = acc / unfolded_acc[aa]
+    
     if (bsa < 0.07):
         buried = True
 
